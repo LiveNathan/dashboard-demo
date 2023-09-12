@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+#sun,#moon {
+    position: absolute;
+    width: 100px;
+    z-index: -1;
+}
