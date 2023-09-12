@@ -1,0 +1,7 @@
+{
+  "name": "dashboard-demo",
+  "version": "1.0.0",
+  "devDependencies": {
+    "tailwindcss": "^3.3.3"
+  }
+}
