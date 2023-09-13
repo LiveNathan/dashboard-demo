@@ -1,5 +1,30 @@
+const IPSTACK_ACCESS_KEY = "315c943e1895202bbf4fc8129849e4b4";
+const OPENWEATHERMAP_KEY = "5123e4f646b5f440cbfed22476f68163";
+
+function objectToString(obj) {
+    if (typeof obj !== 'object' || Array.isArray(obj)) {
+        throw new Error('Provided argument is not an object');
+    }
+
+    for (let key in obj) {
+        if (typeof obj[key] === 'object' && obj[key] !== null) {
+            throw new Error('Nested objects are not allowed');
+        }
+    }
+
+    return new URLSearchParams(obj).toString();
+}
+
+function stringToObject(query) {
+    const params = new URLSearchParams(query);
+    const obj = {};
+    for (let [key, value] of params.entries()) {
+        obj[key] = value;
+    }
+    return obj;
+}
+
 async function getIpStack() {
-    const IPSTACK_ACCESS_KEY = "315c943e1895202bbf4fc8129849e4b4";
     try {
         let ipstackResponse = await fetch("http://api.ipstack.com/check?output=json&access_key=" + IPSTACK_ACCESS_KEY);
         let ipstackData = await ipstackResponse.json();
@@ -23,7 +48,7 @@ async function getIpStack() {
         document.getElementById("latitude").textContent += ": " + latitude;
         document.getElementById("longitude").textContent += ": " + longitude;
 
-        return {countryCode: data.country_code, latitude: data.latitude, longitude: data.longitude};
+        return {countryCode: country_code, latitude: latitude, longitude: longitude};
     } catch (error) {
         console.error('Error fetching IP Stack:', error);
     }
@@ -62,6 +87,24 @@ async function getCountries() {
 }
 
 getCountries();
+
+async function getWeather() {
+    try {
+        const {latitude, longitude} = await getIpStack();
+        let weatherResponse = await fetch(`https://api.openweathermap.org/data/3.0/onecall?lat=${latitude}&lon=${longitude}&exclude=minutely,hourly,daily,alerts&units=metric&appid=${OPENWEATHERMAP_KEY}`);
+        let weatherData = await weatherResponse.json();
+
+
+        document.getElementById("timeSunrise").textContent += ": " + sunriseString;
+        document.getElementById("timeSunset").textContent += ": " + sunsetString;
+        document.getElementById("dayLength").textContent += ": " + dayLength;
+        document.getElementById("timeSolarNoon").textContent += ": " + solarNoonString;
+
+        return {sunriseTime, sunsetTime, solarNoonTime}
+    } catch (error) {
+        console.error('Error fetching sun data:', error);
+    }
+}
 
 async function getSun() {
     try {
