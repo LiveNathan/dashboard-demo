@@ -77,9 +77,9 @@ async function getCountryData(countryCode) {
 
 getCountryData();
 
-async function getWeather() {
+async function getWeatherData(latitude, longitude) {
     try {
-        const {latitude, longitude} = await getIpStack();
+        // const {latitude, longitude} = await getIpStack();
         let weatherResponse = await fetch(`https://api.openweathermap.org/data/3.0/onecall?lat=${latitude}&lon=${longitude}&exclude=minutely,hourly,daily,alerts&units=metric&appid=${OPENWEATHERMAP_KEY}`);
         let weatherData = await weatherResponse.json();
 
@@ -121,35 +121,31 @@ async function getSun() {
     }
 }
 
-async function getIssLocation() {
+async function getIssLocationData() {
     try {
         let openNotifyResponse = await fetch("http://api.open-notify.org/iss-now.json");
         let openNotifyData = await openNotifyResponse.json();
         let latitude = openNotifyData.iss_position.latitude;
         let longitude = openNotifyData.iss_position.longitude;
 
-        document.getElementById("issLatitude").textContent += ": " + latitude;
-        document.getElementById("issLongitude").textContent += ": " + longitude;
+        return openNotifyData;
     } catch (error) {
         console.error('Error fetching ISS people data:', error);
     }
 }
 
-getIssLocation();
-
-async function getIssPeople() {
+async function getIssPeopleData() {
     try {
         let openNotifyResponse = await fetch("http://api.open-notify.org/astros.json");
         let openNotifyData = await openNotifyResponse.json();
         let population = openNotifyData.number;
 
-        document.getElementById("spacePopulation").textContent += ": " + population;
+        return openNotifyData;
     } catch (error) {
         console.error('Error fetching ISS people data:', error);
     }
 }
 
-getIssPeople();
 
 async function getSunMultiplier() {
     const {sunriseTime, sunsetTime, solarNoonTime} = await getSun();
@@ -212,4 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function main() {
     const ipstackData = getIpStack();
     const countryData = getCountryData(ipstackData.country_code);
+    const weatherData = getWeatherData(ipstackData.latitude, ipstackData.longitude);
+    const issLocationData = getIssLocationData();
+    const issPeopleData = getIssPeopleData();
 }
