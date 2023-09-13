@@ -38,17 +38,7 @@ async function getIpStack() {
         let latitude = ipstackData.latitude;
         let longitude = ipstackData.longitude;
 
-        document.getElementById("ipAddress").textContent += ": " + ip;
-        document.getElementById("country").textContent += ": " + country;
-        document.getElementById("countryCode").textContent += ": " + countryCode;
-        document.getElementById("countryFlag").textContent += ": " + countryFlagEmoji;
-        document.getElementById("countryLanguage").textContent += ": " + language;
-        document.getElementById("region").textContent += ": " + region;
-        document.getElementById("city").textContent += ": " + city;
-        document.getElementById("latitude").textContent += ": " + latitude;
-        document.getElementById("longitude").textContent += ": " + longitude;
-
-        return {countryCode: country_code, latitude: latitude, longitude: longitude};
+        return ipstackData;
     } catch (error) {
         console.error('Error fetching IP Stack:', error);
     }
@@ -73,20 +63,19 @@ async function getWorldTime() {
     }
 }
 
-async function getCountries() {
+async function getCountryData(countryCode) {
     try {
-        const {countryCode} = await getIpStack();
+        // const {countryCode} = await getIpStack();
         let countriesResponse = await fetch("https://restcountries.com/v3.1/alpha/" + countryCode + "?fields=population");
-        let countriesData = await countriesResponse.json();
-        let countryPopulation = countriesData.population;
+        // let countryPopulation = countriesData.population;
 
-        document.getElementById("countryPopulation").textContent += ": " + countryPopulation;
+        return await countriesResponse.json();
     } catch (error) {
         console.error('Error fetching country data:', error);
     }
 }
 
-getCountries();
+getCountryData();
 
 async function getWeather() {
     try {
@@ -145,6 +134,7 @@ async function getIssLocation() {
         console.error('Error fetching ISS people data:', error);
     }
 }
+
 getIssLocation();
 
 async function getIssPeople() {
@@ -158,6 +148,7 @@ async function getIssPeople() {
         console.error('Error fetching ISS people data:', error);
     }
 }
+
 getIssPeople();
 
 async function getSunMultiplier() {
@@ -192,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sunImg = document.getElementById('sun');
     const moonImg = document.getElementById('moon');
 
-    setInterval(async function() {
+    setInterval(async function () {
         const multiplier = await getSunMultiplier();
         const yPos = `${multiplier * 100}vh`;
 
@@ -217,3 +208,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.color = `rgb(${fontRed}, ${fontGreen}, ${fontBlue})`;
     }, 1000);
 });
+
+function main() {
+    const ipstackData = getIpStack();
+    const countryData = getCountryData(ipstackData.country_code);
+}
