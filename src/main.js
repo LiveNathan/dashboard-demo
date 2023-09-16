@@ -146,64 +146,34 @@ async function getIssPeopleData() {
     }
 }
 
-
-async function getSunMultiplier() {
-    const {sunriseTime, sunsetTime, solarNoonTime} = await getSun();
-    const currentTime = await getWorldTime();
-
-    const sunrise = sunriseTime.getTime();
-    const sunset = sunsetTime.getTime();
-    const noon = solarNoonTime.getTime();
-    const now = currentTime.getTime();
-
-    // Calculate midnight (opposite of solar noon)
-    const prevMidnight = noon - 12 * 60 * 60 * 1000;    // midnight of the current day
-    const nextMidnight = noon + 12 * 60 * 60 * 1000;    // midnight of the next day
-
-    let multiplier;
-    if (now >= sunrise && now <= noon) {
-        multiplier = 0.5 + 0.5 * (now - sunrise) / (noon - sunrise);
-    } else if (now > noon && now <= sunset) {
-        multiplier = 1 - 0.5 * (now - noon) / (sunset - noon);
-    } else if (now > sunset && now <= nextMidnight) {
-        multiplier = 0.5 - 0.5 * (now - sunset) / (nextMidnight - sunset);
-    } else {
-        let midnight = now < sunrise ? prevMidnight : nextMidnight;
-        multiplier = 0.5 * (now - midnight) / (sunrise - midnight);
-    }
-
-    return multiplier;
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1); // deg2rad below
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(deg2rad(lat1)) *
+        Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c; // Distance in km
+    return d;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const sunImg = document.getElementById('sun');
-    const moonImg = document.getElementById('moon');
+function deg2rad(deg) {
+    return deg * (Math.PI / 180);
+}
 
-    setInterval(async function () {
-        const multiplier = await getSunMultiplier();
-        const yPos = `${multiplier * 100}vh`;
-
-        sunImg.style.bottom = yPos;
-        moonImg.style.bottom = yPos;
-
-        sunImg.style.display = (multiplier > 0.5) ? 'block' : 'none';
-        moonImg.style.display = (multiplier > 0.5) ? 'none' : 'block';
-
-        const colorValue = multiplier * 255;
-        const red = Math.round(colorValue);
-        const green = Math.round(colorValue);
-        const blue = Math.round(colorValue);
-
-        document.body.style.backgroundColor = `rgb(${red}, ${green}, ${blue})`;
-
-        // Calculate inverse colors
-        const fontRed = 255 - red;
-        const fontGreen = 255 - green;
-        const fontBlue = 255 - blue;
-
-        document.body.style.color = `rgb(${fontRed}, ${fontGreen}, ${fontBlue})`;
-    }, 1000);
-});
+function compareGini(x) {
+    if (x > 50) {
+        return 'very high';
+    } else if (x > 40) {
+        return 'high';
+    } else if (x > 30) {
+        return 'medium';
+    } else return 'low';
+}
 
 function main() {
     const ipstackData = getIpStack();
@@ -212,3 +182,4 @@ function main() {
     const issLocationData = getIssLocationData();
     const issPeopleData = getIssPeopleData();
 }
+main();
