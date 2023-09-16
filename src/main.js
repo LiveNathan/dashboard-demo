@@ -44,6 +44,28 @@ async function getIpStack() {
     }
 }
 
+function handleIpStackData(ipstackData) {
+    let ipStackDiv = createHTMLElement('div', 'ipStack', ['flex flex-col']);
+    getElementById('root').appendChild(ipStackDiv);
+
+    let ipAddressDiv = createHTMLElement('div', 'ipAddress', ['text-2xl font-bold']);
+    ipAddressDiv.innerText = ipstackData.ip;
+    ipStackDiv.appendChild(ipAddressDiv);
+
+    let countryDiv = createHTMLElement('div', 'country', ['text-xl']);
+    countryDiv.innerText = ipstackData.country_name;
+    ipStackDiv.appendChild(countryDiv);
+
+    let countryFlagDiv = createHTMLElement('div', 'countryFlag', ['flex']);
+    countryDiv.appendChild(countryFlagDiv);
+
+    let countryFlagEmojiDiv = createHTMLElement('div', 'countryFlagEmoji', ['text-2xl']);
+    countryFlagDiv.appendChild(countryFlagEmojiDiv);
+
+    let countryNameDiv = createHTMLElement('div', 'countryName', ['text-xl']);
+    countryFlagDiv.appendChild(countryNameDiv);
+}
+
 async function getWorldTime() {
     try {
         let worldTimeResponse = await fetch("http://worldtimeapi.org/api/ip");
@@ -109,12 +131,6 @@ async function getSun() {
         let solarNoonTime = new Date(sunResults.solar_noon);
         let solarNoonString = solarNoonTime.toLocaleTimeString()
 
-
-        document.getElementById("timeSunrise").textContent += ": " + sunriseString;
-        document.getElementById("timeSunset").textContent += ": " + sunsetString;
-        document.getElementById("dayLength").textContent += ": " + dayLength;
-        document.getElementById("timeSolarNoon").textContent += ": " + solarNoonString;
-
         return {sunriseTime, sunsetTime, solarNoonTime}
     } catch (error) {
         console.error('Error fetching sun data:', error);
@@ -175,8 +191,17 @@ function compareGini(x) {
     } else return 'low';
 }
 
+const createHTMLElement = (element, id, classes = []) => {
+    const htmlElement = document.createElement(element);
+    if (id) htmlElement.id = id.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
+    if (classes && classes.length > 0) classes.forEach(cls => htmlElement.classList.add(cls));
+    return htmlElement;
+}
+
+
 function main() {
     const ipstackData = getIpStack();
+    handleIpStackData(ipstackData);
     const countryData = getCountryData(ipstackData.country_code);
     const weatherData = getWeatherData(ipstackData.latitude, ipstackData.longitude);
     const issLocationData = getIssLocationData();
