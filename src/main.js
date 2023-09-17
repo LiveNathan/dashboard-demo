@@ -1,42 +1,53 @@
-const IPSTACK_ACCESS_KEY = "315c943e1895202bbf4fc8129849e4b4";
-const OPENWEATHERMAP_KEY = "5123e4f646b5f440cbfed22476f68163";
+const root = document.getElementById('root');
 
-function objectToString(obj) {
-    if (typeof obj !== 'object' || Array.isArray(obj)) {
-        throw new Error('Provided argument is not an object');
-    }
+// function objectToString(obj) {
+//     if (typeof obj !== 'object' || Array.isArray(obj)) {
+//         throw new Error('Provided argument is not an object');
+//     }
+//
+//     for (let key in obj) {
+//         if (typeof obj[key] === 'object' && obj[key] !== null) {
+//             throw new Error('Nested objects are not allowed');
+//         }
+//     }
+//
+//     return new URLSearchParams(obj).toString();
+// }
+//
+// function stringToObject(query) {
+//     const params = new URLSearchParams(query);
+//     const obj = {};
+//     for (let [key, value] of params.entries()) {
+//         obj[key] = value;
+//     }
+//     return obj;
+// }
 
-    for (let key in obj) {
-        if (typeof obj[key] === 'object' && obj[key] !== null) {
-            throw new Error('Nested objects are not allowed');
-        }
-    }
-
-    return new URLSearchParams(obj).toString();
-}
-
-function stringToObject(query) {
-    const params = new URLSearchParams(query);
-    const obj = {};
-    for (let [key, value] of params.entries()) {
-        obj[key] = value;
-    }
-    return obj;
+function createElementAndAppend({parentElement, elementType, elementId = '', classNames = '', textVal = ''}) {
+    const newElement = document.createElement(elementType);
+    newElement.id = elementId;
+    newElement.className = classNames;
+    newElement.innerText = textVal;
+    parentElement.appendChild(newElement);
+    return newElement;
 }
 
 async function getIpStack() {
     try {
+        const IPSTACK_ACCESS_KEY = "315c943e1895202bbf4fc8129849e4b4";
         let ipstackResponse = await fetch("http://api.ipstack.com/check?output=json&access_key=" + IPSTACK_ACCESS_KEY);
         let ipstackData = await ipstackResponse.json();
-        let ip = ipstackData.ip;
-        let country = ipstackData.country_name;
-        let countryCode = ipstackData.country_code;
-        let countryFlagEmoji = ipstackData.location.country_flag_emoji;
-        let language = ipstackData.location.languages[0].name;
-        let region = ipstackData.region_name;
-        let city = ipstackData.city;
-        let latitude = ipstackData.latitude;
-        let longitude = ipstackData.longitude;
+        console.log(ipstackData);
+
+        // let ip = ipstackData.ip;
+        // let country = ipstackData.country_name;
+        // let countryCode = ipstackData.country_code;
+        // let countryFlagEmoji = ipstackData.location.country_flag_emoji;
+        // let language = ipstackData.location.languages[0].name;
+        // let region = ipstackData.region_name;
+        // let city = ipstackData.city;
+        // let latitude = ipstackData.latitude;
+        // let longitude = ipstackData.longitude;
 
         return ipstackData;
     } catch (error) {
@@ -44,26 +55,19 @@ async function getIpStack() {
     }
 }
 
-function handleIpStackData(ipstackData) {
-    let ipStackDiv = createHTMLElement('div', 'ipStack', ['flex flex-col']);
-    getElementById('root').appendChild(ipStackDiv);
+function addIpStackToDashboard(ipstackData) {
+    const ipStackDiv = createElementAndAppend({ parentElement: root, elementType: 'div', elementId: 'ipStack', classNames: 'flex flex-col' });
+    createElementAndAppend({ parentElement: ipStackDiv, elementType: 'div', elementId: 'ipAddress', classNames: 'text-2xl font-bold', textVal: ipstackData.ip });
 
-    let ipAddressDiv = createHTMLElement('div', 'ipAddress', ['text-2xl font-bold']);
-    ipAddressDiv.innerText = ipstackData.ip;
-    ipStackDiv.appendChild(ipAddressDiv);
-
-    let countryDiv = createHTMLElement('div', 'country', ['text-xl']);
-    countryDiv.innerText = ipstackData.country_name;
-    ipStackDiv.appendChild(countryDiv);
-
-    let countryFlagDiv = createHTMLElement('div', 'countryFlag', ['flex']);
-    countryDiv.appendChild(countryFlagDiv);
-
-    let countryFlagEmojiDiv = createHTMLElement('div', 'countryFlagEmoji', ['text-2xl']);
-    countryFlagDiv.appendChild(countryFlagEmojiDiv);
-
-    let countryNameDiv = createHTMLElement('div', 'countryName', ['text-xl']);
-    countryFlagDiv.appendChild(countryNameDiv);
+    const countryDiv = createElementAndAppend({ parentElement: ipStackDiv, elementType: 'div', elementId: 'country', classNames: 'flex text-xl justify-between flex-wrap' });
+    createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'countryName', classNames: 'text-xl', textVal: ipstackData.country_name });
+    createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'countryCode', classNames: 'text-xl', textVal: ipstackData.country_code });
+    createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'flagEmoji', classNames: 'text-xl', textVal: ipstackData.location.country_flag_emoji });
+    createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'languages', classNames: 'text-xl', textVal: ipstackData.location.languages[0].name });
+    createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'region', classNames: 'text-xl', textVal: ipstackData.region_name });
+    createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'city', classNames: 'text-xl', textVal: ipstackData.city });
+    createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'latitude', classNames: 'text-xl', textVal: ipstackData.latitude.toString() });
+    createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'longitude', classNames: 'text-xl', textVal: ipstackData.longitude.toString() });
 }
 
 async function getWorldTime() {
@@ -97,11 +101,10 @@ async function getCountryData(countryCode) {
     }
 }
 
-getCountryData();
-
 async function getWeatherData(latitude, longitude) {
     try {
         // const {latitude, longitude} = await getIpStack();
+        const OPENWEATHERMAP_KEY = "5123e4f646b5f440cbfed22476f68163";
         let weatherResponse = await fetch(`https://api.openweathermap.org/data/3.0/onecall?lat=${latitude}&lon=${longitude}&exclude=minutely,hourly,daily,alerts&units=metric&appid=${OPENWEATHERMAP_KEY}`);
         let weatherData = await weatherResponse.json();
 
@@ -194,17 +197,25 @@ function compareGini(x) {
 const createHTMLElement = (element, id, classes = []) => {
     const htmlElement = document.createElement(element);
     if (id) htmlElement.id = id.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
-    if (classes && classes.length > 0) classes.forEach(cls => htmlElement.classList.add(cls));
+
+    if (classes && classes.length > 0) {
+        let splitClasses = classes.flatMap(cls => cls.split(' '));
+        splitClasses.forEach(cls => htmlElement.classList.add(cls));
+    }
+
     return htmlElement;
 }
 
 
-function main() {
-    const ipstackData = getIpStack();
-    handleIpStackData(ipstackData);
-    const countryData = getCountryData(ipstackData.country_code);
-    const weatherData = getWeatherData(ipstackData.latitude, ipstackData.longitude);
-    const issLocationData = getIssLocationData();
-    const issPeopleData = getIssPeopleData();
+async function main() {
+    const ipstackData = await getIpStack();
+    addIpStackToDashboard(ipstackData);
+    // const countryData = getCountryData(ipstackData.country_code);
+    // const weatherData = getWeatherData(ipstackData.latitude, ipstackData.longitude);
+    // const issLocationData = getIssLocationData();
+    // const issPeopleData = getIssPeopleData();
 }
-main();
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    main();
+});
