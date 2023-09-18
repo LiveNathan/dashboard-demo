@@ -36,20 +36,7 @@ async function getIpStack() {
     try {
         const IPSTACK_ACCESS_KEY = "315c943e1895202bbf4fc8129849e4b4";
         let ipstackResponse = await fetch("http://api.ipstack.com/check?output=json&access_key=" + IPSTACK_ACCESS_KEY);
-        let ipstackData = await ipstackResponse.json();
-        console.log(ipstackData);
-
-        // let ip = ipstackData.ip;
-        // let country = ipstackData.country_name;
-        // let countryCode = ipstackData.country_code;
-        // let countryFlagEmoji = ipstackData.location.country_flag_emoji;
-        // let language = ipstackData.location.languages[0].name;
-        // let region = ipstackData.region_name;
-        // let city = ipstackData.city;
-        // let latitude = ipstackData.latitude;
-        // let longitude = ipstackData.longitude;
-
-        return ipstackData;
+        return await ipstackResponse.json();
     } catch (error) {
         console.error('Error fetching IP Stack:', error);
     }
@@ -57,17 +44,18 @@ async function getIpStack() {
 
 function addIpStackToDashboard(ipstackData) {
     const ipStackDiv = createElementAndAppend({ parentElement: root, elementType: 'div', elementId: 'ipStack', classNames: 'flex flex-col' });
-    createElementAndAppend({ parentElement: ipStackDiv, elementType: 'div', elementId: 'ipAddress', classNames: 'text-2xl font-bold', textVal: ipstackData.ip });
+    createElementAndAppend({ parentElement: ipStackDiv, elementType: 'div', elementId: 'ipAddress', classNames: 'text-2xl font-bold', textVal: "Country" });
 
-    const countryDiv = createElementAndAppend({ parentElement: ipStackDiv, elementType: 'div', elementId: 'country', classNames: 'flex text-xl justify-between flex-wrap' });
+    const countryDiv = createElementAndAppend({ parentElement: ipStackDiv, elementType: 'div', elementId: 'country', classNames: 'flex text-xl justify-between flex-wrap gap-2' });
     createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'countryName', classNames: 'text-xl', textVal: ipstackData.country_name });
     createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'countryCode', classNames: 'text-xl', textVal: ipstackData.country_code });
     createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'flagEmoji', classNames: 'text-xl', textVal: ipstackData.location.country_flag_emoji });
+    createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'population', classNames: 'text-xl', textVal: "pop:" + ipstackData.population.toLocaleString() });
     createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'languages', classNames: 'text-xl', textVal: ipstackData.location.languages[0].name });
     createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'region', classNames: 'text-xl', textVal: ipstackData.region_name });
     createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'city', classNames: 'text-xl', textVal: ipstackData.city });
-    createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'latitude', classNames: 'text-xl', textVal: ipstackData.latitude.toString() });
-    createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'longitude', classNames: 'text-xl', textVal: ipstackData.longitude.toString() });
+    createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'latitude', classNames: 'text-xl', textVal: "lat:" + ipstackData.latitude.toFixed(2) + "º" });
+    createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'longitude', classNames: 'text-xl', textVal: "lon:" + ipstackData.longitude.toFixed(2) + "º" });
 }
 
 async function getWorldTime() {
@@ -91,11 +79,9 @@ async function getWorldTime() {
 
 async function getCountryData(countryCode) {
     try {
-        // const {countryCode} = await getIpStack();
         let countriesResponse = await fetch("https://restcountries.com/v3.1/alpha/" + countryCode + "?fields=population");
-        // let countryPopulation = countriesData.population;
-
-        return await countriesResponse.json();
+        let countriesData = await countriesResponse.json();
+        return countriesData.population;
     } catch (error) {
         console.error('Error fetching country data:', error);
     }
@@ -103,22 +89,39 @@ async function getCountryData(countryCode) {
 
 async function getWeatherData(latitude, longitude) {
     try {
-        // const {latitude, longitude} = await getIpStack();
         const OPENWEATHERMAP_KEY = "5123e4f646b5f440cbfed22476f68163";
         let weatherResponse = await fetch(`https://api.openweathermap.org/data/3.0/onecall?lat=${latitude}&lon=${longitude}&exclude=minutely,hourly,daily,alerts&units=metric&appid=${OPENWEATHERMAP_KEY}`);
         let weatherData = await weatherResponse.json();
-
-
-        document.getElementById("timeSunrise").textContent += ": " + sunriseString;
-        document.getElementById("timeSunset").textContent += ": " + sunsetString;
-        document.getElementById("dayLength").textContent += ": " + dayLength;
-        document.getElementById("timeSolarNoon").textContent += ": " + solarNoonString;
-
-        return {sunriseTime, sunsetTime, solarNoonTime}
+        return weatherData.current;
     } catch (error) {
         console.error('Error fetching sun data:', error);
     }
 }
+
+function addWeatherDataToDashboard(weatherData) {
+    const weatherDiv = createElementAndAppend({ parentElement: root, elementType: 'div', elementId: 'weather', classNames: 'flex text-xl justify-between flex-wrap gap-2' });
+    createElementAndAppend({ parentElement: weatherDiv, elementType: 'div', elementId: 'sunrise', classNames: 'text-2xl font-bold', textVal: "Weather" });
+
+    const weatherDataDiv = createElementAndAppend({ parentElement: weatherDiv, elementType: 'div', elementId: 'weatherData', classNames: 'flex text-xl justify-between flex-wrap gap-2' });
+    const sunrise = new Date(weatherData.sunrise * 1000);
+    createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'sunrise', classNames: 'text-xl', textVal: "🌅" + sunrise.toLocaleTimeString() });
+    const sunset = new Date(weatherData.sunset * 1000);
+    createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'sunrise', classNames: 'text-xl', textVal: "🌆" + sunset.toLocaleTimeString() });
+    const tempC = weatherData.temp;
+    const tempF = c2f(tempC);
+    createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'temperature', classNames: 'text-xl', textVal: tempC + '°C / ' + tempF.toFixed(2) + "ºF" });
+    const tempCfeelsLike = weatherData.feels_like;
+    const tempFfeesLike = c2f(tempCfeelsLike);
+    createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'temperatureCfeelsLike', classNames: 'text-xl', textVal: "Feels like:" + tempCfeelsLike + '°C / ' + tempFfeesLike.toFixed(2) + "ºF" });
+    createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'weatherConditions', classNames: 'text-xl', textVal: weatherData.weather[0].description});
+    createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'pressure', classNames: 'text-xl', textVal: weatherData.pressure.toLocaleString() + "hPa"});
+    createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'humidity', classNames: 'text-xl', textVal: weatherData.humidity.toString() + "%"});
+}
+
+function c2f (C) {
+    return C * 9/5 + 32;
+}
+
 
 async function getSun() {
     try {
@@ -206,12 +209,12 @@ const createHTMLElement = (element, id, classes = []) => {
     return htmlElement;
 }
 
-
 async function main() {
     const ipstackData = await getIpStack();
+    ipstackData.population = await getCountryData(ipstackData.country_code);
     addIpStackToDashboard(ipstackData);
-    // const countryData = getCountryData(ipstackData.country_code);
-    // const weatherData = getWeatherData(ipstackData.latitude, ipstackData.longitude);
+    const weatherData = await getWeatherData(ipstackData.latitude, ipstackData.longitude);
+    addWeatherDataToDashboard(weatherData);
     // const issLocationData = getIssLocationData();
     // const issPeopleData = getIssPeopleData();
 }
