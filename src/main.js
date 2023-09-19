@@ -79,7 +79,7 @@ async function getWorldTime() {
     }
 }
 
-function addTimeToDashboard(time) {
+function addTimeToDashboard(time, sun) {
     const dayTimeDiv = createElementAndAppend({ parentElement: root, elementType: 'div', elementId: 'ipStack', classNames: 'flex flex-col' });
 
     const timeDiv = createElementAndAppend({ parentElement: dayTimeDiv, elementType: 'div', elementId: 'timeDiv', classNames: 'flex gap-2 flew-wrap' });
@@ -90,6 +90,12 @@ function addTimeToDashboard(time) {
     const dayDiv = createElementAndAppend({ parentElement: dayTimeDiv, elementType: 'div', elementId: 'timeDiv', classNames: 'flex gap-2 flew-wrap' });
     createElementAndAppend({ parentElement: dayDiv, elementType: 'div', elementId: 'weekNumber', classNames: 'text-xl', textVal: "week:" + time.weekNumber });
     createElementAndAppend({ parentElement: dayDiv, elementType: 'div', elementId: 'dayOfYear', classNames: 'text-xl', textVal: "day:" + time.dayOfYear });
+
+    const sunDiv = createElementAndAppend({ parentElement: dayTimeDiv, elementType: 'div', elementId: 'sunDiv', classNames: 'flex gap-2 flew-wrap' });
+    createElementAndAppend({ parentElement: sunDiv, elementType: 'div', elementId: 'sunrise', classNames: 'text-xl', textVal: "🌅" + sun.sunrise });
+    createElementAndAppend({ parentElement: sunDiv, elementType: 'div', elementId: 'sunset', classNames: 'text-xl', textVal: "🕛" + sun.solarNoon });
+    createElementAndAppend({ parentElement: sunDiv, elementType: 'div', elementId: 'sunset', classNames: 'text-xl', textVal: "🌆" + sun.sunset });
+    createElementAndAppend({ parentElement: sunDiv, elementType: 'div', elementId: 'sunset', classNames: 'text-xl', textVal: "🍻" + (sun.dayLength/3600).toFixed(2) + "h" });
 }
 
 async function getCountryData(countryCode) {
@@ -118,10 +124,10 @@ function addWeatherDataToDashboard(weatherData) {
     createElementAndAppend({ parentElement: weatherDiv, elementType: 'div', elementId: 'sunrise', classNames: 'text-2xl font-bold', textVal: "Weather" });
 
     const weatherDataDiv = createElementAndAppend({ parentElement: weatherDiv, elementType: 'div', elementId: 'weatherData', classNames: 'flex text-xl justify-between flex-wrap gap-2' });
-    const sunrise = new Date(weatherData.sunrise * 1000);
-    createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'sunrise', classNames: 'text-xl', textVal: "🌅" + sunrise.toLocaleTimeString() });
-    const sunset = new Date(weatherData.sunset * 1000);
-    createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'sunrise', classNames: 'text-xl', textVal: "🌆" + sunset.toLocaleTimeString() });
+    // const sunrise = new Date(weatherData.sunrise * 1000);
+    // createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'sunrise', classNames: 'text-xl', textVal: "🌅" + sunrise.toLocaleTimeString() });
+    // const sunset = new Date(weatherData.sunset * 1000);
+    // createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'sunrise', classNames: 'text-xl', textVal: "🌆" + sunset.toLocaleTimeString() });
     const tempC = weatherData.temp;
     const tempF = c2f(tempC);
     createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'temperature', classNames: 'text-xl', textVal: tempC + '°C / ' + tempF.toFixed(2) + "ºF" });
@@ -145,15 +151,19 @@ async function getSun() {
         const sunResponse = await fetch(`https://api.sunrise-sunset.org/json?formatted=0&lat=${latitude}&lng=${longitude}`);
         const sunData = await sunResponse.json();
         const sunResults = sunData.results;
-        let sunriseTime = new Date(sunResults.sunrise);
-        let sunsetTime = new Date(sunResults.sunset);
-        let sunriseString = sunriseTime.toLocaleTimeString();
-        let sunsetString = sunsetTime.toLocaleTimeString();
-        let dayLength = sunResults.day_length;
-        let solarNoonTime = new Date(sunResults.solar_noon);
-        let solarNoonString = solarNoonTime.toLocaleTimeString()
-
-        return {sunriseTime, sunsetTime, solarNoonTime}
+        const sunriseTime = new Date(sunResults.sunrise);
+        const sunsetTime = new Date(sunResults.sunset);
+        const sunriseString = sunriseTime.toLocaleTimeString();
+        const sunsetString = sunsetTime.toLocaleTimeString();
+        const dayLength = sunResults.day_length;
+        const solarNoonTime = new Date(sunResults.solar_noon);
+        const solarNoonString = solarNoonTime.toLocaleTimeString()
+        return {
+            "sunrise": sunriseString,
+            "sunset": sunsetString,
+            "dayLength": dayLength,
+            "solarNoon": solarNoonString
+        }
     } catch (error) {
         console.error('Error fetching sun data:', error);
     }
@@ -226,7 +236,8 @@ function compareGini(x) {
 
 async function main() {
     const time = await getWorldTime();
-    addTimeToDashboard(time);
+    const sun = await getSun();
+    addTimeToDashboard(time, sun);
     const ipstackData = await getIpStack();
     ipstackData.population = await getCountryData(ipstackData.country_code);
     addIpStackToDashboard(ipstackData);
