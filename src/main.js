@@ -54,8 +54,7 @@ function addIpStackToDashboard(ipstackData) {
     createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'languages', classNames: 'text-xl', textVal: ipstackData.location.languages[0].name });
     createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'region', classNames: 'text-xl', textVal: ipstackData.region_name });
     createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'city', classNames: 'text-xl', textVal: ipstackData.city });
-    createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'latitude', classNames: 'text-xl', textVal: "lat:" + ipstackData.latitude.toFixed(2) + "º" });
-    createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'longitude', classNames: 'text-xl', textVal: "lon:" + ipstackData.longitude.toFixed(2) + "º" });
+    createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'latAndLon', classNames: 'text-xl', textVal: ipstackData.latitude.toFixed(2) + "º" + ipstackData.longitude.toFixed(2) + "º" });
 }
 
 async function getWorldTime() {
@@ -99,7 +98,7 @@ async function getWeatherData(latitude, longitude) {
 }
 
 function addWeatherDataToDashboard(weatherData) {
-    const weatherDiv = createElementAndAppend({ parentElement: root, elementType: 'div', elementId: 'weather', classNames: 'flex text-xl justify-between flex-wrap gap-2' });
+    const weatherDiv = createElementAndAppend({ parentElement: root, elementType: 'div', elementId: 'weather', classNames: 'flex flex-col' });
     createElementAndAppend({ parentElement: weatherDiv, elementType: 'div', elementId: 'sunrise', classNames: 'text-2xl font-bold', textVal: "Weather" });
 
     const weatherDataDiv = createElementAndAppend({ parentElement: weatherDiv, elementType: 'div', elementId: 'weatherData', classNames: 'flex text-xl justify-between flex-wrap gap-2' });
@@ -116,6 +115,7 @@ function addWeatherDataToDashboard(weatherData) {
     createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'weatherConditions', classNames: 'text-xl', textVal: weatherData.weather[0].description});
     createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'pressure', classNames: 'text-xl', textVal: weatherData.pressure.toLocaleString() + "hPa"});
     createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'humidity', classNames: 'text-xl', textVal: weatherData.humidity.toString() + "%"});
+    createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'windSpeed', classNames: 'text-xl', textVal: weatherData.wind_speed.toString() + "m/s"});
 }
 
 function c2f (C) {
@@ -126,9 +126,9 @@ function c2f (C) {
 async function getSun() {
     try {
         const {latitude, longitude} = await getIpStack();
-        let sunResponse = await fetch(`https://api.sunrise-sunset.org/json?formatted=0&lat=${latitude}&lng=${longitude}`);
-        let sunData = await sunResponse.json();
-        let sunResults = sunData.results;
+        const sunResponse = await fetch(`https://api.sunrise-sunset.org/json?formatted=0&lat=${latitude}&lng=${longitude}`);
+        const sunData = await sunResponse.json();
+        const sunResults = sunData.results;
         let sunriseTime = new Date(sunResults.sunrise);
         let sunsetTime = new Date(sunResults.sunset);
         let sunriseString = sunriseTime.toLocaleTimeString();
@@ -147,10 +147,8 @@ async function getIssLocationData() {
     try {
         let openNotifyResponse = await fetch("http://api.open-notify.org/iss-now.json");
         let openNotifyData = await openNotifyResponse.json();
-        let latitude = openNotifyData.iss_position.latitude;
-        let longitude = openNotifyData.iss_position.longitude;
 
-        return openNotifyData;
+        return openNotifyData.iss_position;
     } catch (error) {
         console.error('Error fetching ISS people data:', error);
     }
@@ -160,9 +158,7 @@ async function getIssPeopleData() {
     try {
         let openNotifyResponse = await fetch("http://api.open-notify.org/astros.json");
         let openNotifyData = await openNotifyResponse.json();
-        let population = openNotifyData.number;
-
-        return openNotifyData;
+        return openNotifyData.number;
     } catch (error) {
         console.error('Error fetching ISS people data:', error);
     }
@@ -179,12 +175,27 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
         Math.sin(dLon / 2) *
         Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const d = R * c; // Distance in km
-    return d;
+
+    return R * c;  // Distance in km
 }
 
 function deg2rad(deg) {
     return deg * (Math.PI / 180);
+}
+
+function addIssDataToDashboard(iss_position, populationSpace, ipstackData) {
+    const issDiv = createElementAndAppend({ parentElement: root, elementType: 'div', elementId: 'issDiv', classNames: 'flex flex-col' });
+    createElementAndAppend({ parentElement: issDiv, elementType: 'div', elementId: 'iss', classNames: 'text-2xl font-bold', textVal: "International Space Station" });
+
+    const issDataDiv = createElementAndAppend({ parentElement: issDiv, elementType: 'div', elementId: 'issData', classNames: 'flex text-xl justify-between flex-wrap gap-2' });
+    const latitude = parseFloat(parseFloat(iss_position.latitude).toFixed(2));
+    const longitude = parseFloat(parseFloat(iss_position.longitude).toFixed(2));
+    createElementAndAppend({ parentElement: issDataDiv, elementType: 'div', elementId: 'issPosition', classNames: 'text-xl', textVal: latitude + 'º, ' + longitude + "º" });
+
+    const issDistanceFromUserLocation = getDistanceFromLatLonInKm(ipstackData.latitude, ipstackData.longitude, latitude, longitude)
+    createElementAndAppend({ parentElement: issDataDiv, elementType: 'div', elementId: 'issDistance', classNames: 'text-xl', textVal: issDistanceFromUserLocation.toLocaleString() + "km from you" });
+
+    createElementAndAppend({ parentElement: issDataDiv, elementType: 'div', elementId: 'issPopulation', classNames: 'text-xl', textVal: "pop:" + populationSpace });
 }
 
 function compareGini(x) {
@@ -197,28 +208,17 @@ function compareGini(x) {
     } else return 'low';
 }
 
-const createHTMLElement = (element, id, classes = []) => {
-    const htmlElement = document.createElement(element);
-    if (id) htmlElement.id = id.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
-
-    if (classes && classes.length > 0) {
-        let splitClasses = classes.flatMap(cls => cls.split(' '));
-        splitClasses.forEach(cls => htmlElement.classList.add(cls));
-    }
-
-    return htmlElement;
-}
-
 async function main() {
     const ipstackData = await getIpStack();
     ipstackData.population = await getCountryData(ipstackData.country_code);
     addIpStackToDashboard(ipstackData);
     const weatherData = await getWeatherData(ipstackData.latitude, ipstackData.longitude);
     addWeatherDataToDashboard(weatherData);
-    // const issLocationData = getIssLocationData();
-    // const issPeopleData = getIssPeopleData();
+    const iss_position = await getIssLocationData();
+    const populationSpace = await getIssPeopleData();
+    addIssDataToDashboard(iss_position, populationSpace, ipstackData);
 }
 
-document.addEventListener('DOMContentLoaded', (event) => {
+document.addEventListener('DOMContentLoaded', () => {
     main();
 });
