@@ -59,21 +59,37 @@ function addIpStackToDashboard(ipstackData) {
 
 async function getWorldTime() {
     try {
-        let worldTimeResponse = await fetch("http://worldtimeapi.org/api/ip");
-        let worldTimeData = await worldTimeResponse.json();
-        let timeZone = worldTimeData.timezone;
-        let dateObject = new Date(worldTimeData.datetime);
-        let formattedDate = dateObject.toLocaleDateString();
-        let formattedTime = dateObject.toLocaleTimeString();
-
-        document.getElementById("timeZone").textContent += ": " + timeZone;
-        document.getElementById("date").textContent += ": " + formattedDate;
-        document.getElementById("time").textContent += ": " + formattedTime;
-
-        return dateObject;
+        const worldTimeResponse = await fetch("http://worldtimeapi.org/api/ip");
+        const worldTimeData = await worldTimeResponse.json();
+        const timeZone = worldTimeData.abbreviation;
+        const dateObject = new Date(worldTimeData.datetime);
+        const formattedDate = dateObject.toLocaleDateString();
+        const formattedTime = dateObject.toLocaleTimeString();
+        const dayOfYear = worldTimeData.day_of_year;
+        const weekNumber = worldTimeData.week_number;
+        return {
+            "timeZone": timeZone,
+            "date": formattedDate,
+            "time": formattedTime,
+            "dayOfYear": dayOfYear,
+            "weekNumber": weekNumber
+        };
     } catch (error) {
         console.error('Error fetching world time:', error);
     }
+}
+
+function addTimeToDashboard(time) {
+    const dayTimeDiv = createElementAndAppend({ parentElement: root, elementType: 'div', elementId: 'ipStack', classNames: 'flex flex-col' });
+
+    const timeDiv = createElementAndAppend({ parentElement: dayTimeDiv, elementType: 'div', elementId: 'timeDiv', classNames: 'flex gap-2 flew-wrap' });
+    createElementAndAppend({ parentElement: timeDiv, elementType: 'div', elementId: 'date', classNames: 'text-2xl font-bold', textVal: time.date });
+    createElementAndAppend({ parentElement: timeDiv, elementType: 'div', elementId: 'time', classNames: 'text-2xl font-bold', textVal: time.time });
+    createElementAndAppend({ parentElement: timeDiv, elementType: 'div', elementId: 'timeZone', classNames: 'text-2xl font-bold', textVal: time.timeZone });
+
+    const dayDiv = createElementAndAppend({ parentElement: dayTimeDiv, elementType: 'div', elementId: 'timeDiv', classNames: 'flex gap-2 flew-wrap' });
+    createElementAndAppend({ parentElement: dayDiv, elementType: 'div', elementId: 'weekNumber', classNames: 'text-xl', textVal: "week:" + time.weekNumber });
+    createElementAndAppend({ parentElement: dayDiv, elementType: 'div', elementId: 'dayOfYear', classNames: 'text-xl', textVal: "day:" + time.dayOfYear });
 }
 
 async function getCountryData(countryCode) {
@@ -209,6 +225,8 @@ function compareGini(x) {
 }
 
 async function main() {
+    const time = await getWorldTime();
+    addTimeToDashboard(time);
     const ipstackData = await getIpStack();
     ipstackData.population = await getCountryData(ipstackData.country_code);
     addIpStackToDashboard(ipstackData);
