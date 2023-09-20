@@ -44,7 +44,7 @@ async function getIpStack() {
 
 function addIpStackToDashboard(ipstackData) {
     const ipStackDiv = createElementAndAppend({ parentElement: root, elementType: 'div', elementId: 'ipStack', classNames: 'flex flex-col' });
-    createElementAndAppend({ parentElement: ipStackDiv, elementType: 'div', elementId: 'ipAddress', classNames: 'text-2xl font-bold', textVal: "Country" });
+    createElementAndAppend({ parentElement: ipStackDiv, elementType: 'div', elementId: 'ipAddress', classNames: 'text-2xl font-bold text-gray-500', textVal: "Country" });
 
     const countryDiv = createElementAndAppend({ parentElement: ipStackDiv, elementType: 'div', elementId: 'country', classNames: 'flex text-xl justify-between flex-wrap gap-2' });
     createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'countryName', classNames: 'text-xl', textVal: ipstackData.country_name });
@@ -54,7 +54,7 @@ function addIpStackToDashboard(ipstackData) {
     createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'languages', classNames: 'text-xl', textVal: ipstackData.location.languages[0].name });
     createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'region', classNames: 'text-xl', textVal: ipstackData.region_name });
     createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'city', classNames: 'text-xl', textVal: ipstackData.city });
-    createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'latAndLon', classNames: 'text-xl', textVal: ipstackData.latitude.toFixed(2) + "º" + ipstackData.longitude.toFixed(2) + "º" });
+    createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'latAndLon', classNames: 'text-xl', textVal: ipstackData.latitude.toFixed(2) + "º, " + ipstackData.longitude.toFixed(2) + "º" });
 }
 
 async function getWorldTime() {
@@ -82,20 +82,20 @@ async function getWorldTime() {
 function addTimeToDashboard(time, sun) {
     const dayTimeDiv = createElementAndAppend({ parentElement: root, elementType: 'div', elementId: 'ipStack', classNames: 'flex flex-col' });
 
-    const timeDiv = createElementAndAppend({ parentElement: dayTimeDiv, elementType: 'div', elementId: 'timeDiv', classNames: 'flex gap-2 flew-wrap' });
+    const timeDiv = createElementAndAppend({ parentElement: dayTimeDiv, elementType: 'div', elementId: 'timeDiv', classNames: 'flex gap-2 flex-wrap' });
     createElementAndAppend({ parentElement: timeDiv, elementType: 'div', elementId: 'date', classNames: 'text-2xl font-bold', textVal: time.date });
     createElementAndAppend({ parentElement: timeDiv, elementType: 'div', elementId: 'time', classNames: 'text-2xl font-bold', textVal: time.time });
     createElementAndAppend({ parentElement: timeDiv, elementType: 'div', elementId: 'timeZone', classNames: 'text-2xl font-bold', textVal: time.timeZone });
 
-    const dayDiv = createElementAndAppend({ parentElement: dayTimeDiv, elementType: 'div', elementId: 'timeDiv', classNames: 'flex gap-2 flew-wrap' });
+    const dayDiv = createElementAndAppend({ parentElement: dayTimeDiv, elementType: 'div', elementId: 'timeDiv', classNames: 'flex gap-2 flex-wrap' });
     createElementAndAppend({ parentElement: dayDiv, elementType: 'div', elementId: 'weekNumber', classNames: 'text-xl', textVal: "week:" + time.weekNumber });
     createElementAndAppend({ parentElement: dayDiv, elementType: 'div', elementId: 'dayOfYear', classNames: 'text-xl', textVal: "day:" + time.dayOfYear });
 
-    const sunDiv = createElementAndAppend({ parentElement: dayTimeDiv, elementType: 'div', elementId: 'sunDiv', classNames: 'flex gap-2 flew-wrap' });
+    const sunDiv = createElementAndAppend({ parentElement: dayTimeDiv, elementType: 'div', elementId: 'sunDiv', classNames: 'flex gap-2 flex-wrap' });
     createElementAndAppend({ parentElement: sunDiv, elementType: 'div', elementId: 'sunrise', classNames: 'text-xl', textVal: "🌅" + sun.sunrise });
-    createElementAndAppend({ parentElement: sunDiv, elementType: 'div', elementId: 'sunset', classNames: 'text-xl', textVal: "🕛" + sun.solarNoon });
+    createElementAndAppend({ parentElement: sunDiv, elementType: 'div', elementId: 'noon', classNames: 'text-xl', textVal: "🕛" + sun.solarNoon });
     createElementAndAppend({ parentElement: sunDiv, elementType: 'div', elementId: 'sunset', classNames: 'text-xl', textVal: "🌆" + sun.sunset });
-    createElementAndAppend({ parentElement: sunDiv, elementType: 'div', elementId: 'sunset', classNames: 'text-xl', textVal: "🍻" + (sun.dayLength/3600).toFixed(2) + "h" });
+    createElementAndAppend({ parentElement: sunDiv, elementType: 'div', elementId: 'dayLength', classNames: 'text-xl', textVal: "🍻" + (sun.dayLength/3600).toFixed(2) + "h" });
 }
 
 async function getCountryData(countryCode) {
@@ -121,7 +121,7 @@ async function getWeatherData(latitude, longitude) {
 
 function addWeatherDataToDashboard(weatherData) {
     const weatherDiv = createElementAndAppend({ parentElement: root, elementType: 'div', elementId: 'weather', classNames: 'flex flex-col' });
-    createElementAndAppend({ parentElement: weatherDiv, elementType: 'div', elementId: 'sunrise', classNames: 'text-2xl font-bold', textVal: "Weather" });
+    createElementAndAppend({ parentElement: weatherDiv, elementType: 'div', elementId: 'sunrise', classNames: 'text-2xl font-bold text-gray-500', textVal: "Weather" });
 
     const weatherDataDiv = createElementAndAppend({ parentElement: weatherDiv, elementType: 'div', elementId: 'weatherData', classNames: 'flex text-xl justify-between flex-wrap gap-2' });
     // const sunrise = new Date(weatherData.sunrise * 1000);
@@ -211,7 +211,7 @@ function deg2rad(deg) {
 
 function addIssDataToDashboard(iss_position, populationSpace, ipstackData) {
     const issDiv = createElementAndAppend({ parentElement: root, elementType: 'div', elementId: 'issDiv', classNames: 'flex flex-col' });
-    createElementAndAppend({ parentElement: issDiv, elementType: 'div', elementId: 'iss', classNames: 'text-2xl font-bold', textVal: "International Space Station" });
+    createElementAndAppend({ parentElement: issDiv, elementType: 'div', elementId: 'iss', classNames: 'text-2xl font-bold text-gray-500', textVal: "International Space Station" });
 
     const issDataDiv = createElementAndAppend({ parentElement: issDiv, elementType: 'div', elementId: 'issData', classNames: 'flex text-xl justify-between flex-wrap gap-2' });
     const latitude = parseFloat(parseFloat(iss_position.latitude).toFixed(2));
