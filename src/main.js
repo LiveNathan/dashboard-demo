@@ -1,28 +1,5 @@
 const root = document.getElementById('root');
 
-// function objectToString(obj) {
-//     if (typeof obj !== 'object' || Array.isArray(obj)) {
-//         throw new Error('Provided argument is not an object');
-//     }
-//
-//     for (let key in obj) {
-//         if (typeof obj[key] === 'object' && obj[key] !== null) {
-//             throw new Error('Nested objects are not allowed');
-//         }
-//     }
-//
-//     return new URLSearchParams(obj).toString();
-// }
-//
-// function stringToObject(query) {
-//     const params = new URLSearchParams(query);
-//     const obj = {};
-//     for (let [key, value] of params.entries()) {
-//         obj[key] = value;
-//     }
-//     return obj;
-// }
-
 function createElementAndAppend({parentElement, elementType, elementId = '', classNames = '', textVal = ''}) {
     const newElement = document.createElement(elementType);
     newElement.id = elementId;
@@ -124,10 +101,6 @@ function addWeatherDataToDashboard(weatherData) {
     createElementAndAppend({ parentElement: weatherDiv, elementType: 'div', elementId: 'sunrise', classNames: 'text-2xl font-bold text-gray-500', textVal: "Weather" });
 
     const weatherDataDiv = createElementAndAppend({ parentElement: weatherDiv, elementType: 'div', elementId: 'weatherData', classNames: 'flex text-xl justify-between flex-wrap gap-2' });
-    // const sunrise = new Date(weatherData.sunrise * 1000);
-    // createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'sunrise', classNames: 'text-xl', textVal: "🌅" + sunrise.toLocaleTimeString() });
-    // const sunset = new Date(weatherData.sunset * 1000);
-    // createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'sunrise', classNames: 'text-xl', textVal: "🌆" + sunset.toLocaleTimeString() });
     const tempC = weatherData.temp;
     const tempF = c2f(tempC);
     createElementAndAppend({ parentElement: weatherDataDiv, elementType: 'div', elementId: 'temperature', classNames: 'text-xl', textVal: tempC + '°C / ' + tempF.toFixed(2) + "ºF" });
@@ -224,19 +197,84 @@ function addIssDataToDashboard(iss_position, populationSpace, ipstackData) {
     createElementAndAppend({ parentElement: issDataDiv, elementType: 'div', elementId: 'issPopulation', classNames: 'text-xl', textVal: "pop:" + populationSpace });
 }
 
-function compareGini(x) {
-    if (x > 50) {
-        return 'very high';
-    } else if (x > 40) {
-        return 'high';
-    } else if (x > 30) {
-        return 'medium';
-    } else return 'low';
+class ColorStep {
+    constructor(time, color) {
+        this.time = time;  // Number of minutes since 0:00
+        this.color = color;  // {r: red, g: green, b: blue}
+    }
+}
+
+function linearInterpolation(start, end, weight) {
+    return start + (end - start) * weight;
+}
+
+function getColorBetween(step1, step2, now) {
+    const weight = (now - step1.time) / (step2.time - step1.time);
+    return {
+        r: Math.round(linearInterpolation(step1.color.r, step2.color.r, weight)),
+        g: Math.round(linearInterpolation(step1.color.g, step2.color.g, weight)),
+        b: Math.round(linearInterpolation(step1.color.b, step2.color.b, weight))
+    };
+}
+
+function getCurrentColor(colorSteps) {
+    // Get the current time as minutes since 0:00
+    const now = new Date();
+    const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
+
+    // Sort steps by time
+    colorSteps.sort((a, b) => a.time - b.time);
+
+    // Find the first timestep that's greater than the current time
+    for(let i = 0; i < colorSteps.length; i++) {
+        if(colorSteps[i].time > minutesSinceMidnight) {
+            // If there's no previous color, then just return this color
+            if(i === 0) return colorSteps[i].color;
+
+            // Return the color between the last color and this one
+            return getColorBetween(colorSteps[i - 1], colorSteps[i], minutesSinceMidnight);
+        }
+    }
+
+    // If there's no color with a greater time then the site's color is
+    // the color of the last step
+    return colorSteps[colorSteps.length - 1].color;
+}
+
+
+function updateSiteColor(steps) {
+    const currentColor = getCurrentColor(steps);
+    document.body.style.backgroundColor = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
 }
 
 async function main() {
     const time = await getWorldTime();
     const sun = await getSun();
+
+    // Create the timeslots based on the fetched sunrise and sunset and solar noon
+    // Convert the time from 'HH:MM:SS' format to the number of minutes since 0:00
+    const sunriseTime = sun.sunrise.split(':').reduce((acc,time) => (60 * acc) + +time);
+    const sunsetTime = sun.sunset.split(':').reduce((acc,time) => (60 * acc) + +time);
+    const solarNoonTime = sun.solarNoon.split(':').reduce((acc,time) => (60 * acc) + +time);
+
+    // Create the approximate times for dawn and dusk
+    const dawnTime = sunriseTime - 60;  // assumed that dawn is 1 hour before sunrise
+    const duskTime = sunsetTime + 60;  // assumed that dusk is 1 hour after sunset
+
+    // Create the ColorStep objects for midnight, dawn, sunrise, solar noon, sunset, dusk and passed them into updateSiteColor function.
+    const colorSteps = [
+        new ColorStep(0, {r: 0, g: 0, b: 255}),                        // Midnight, Dark Blue
+        new ColorStep(dawnTime, {r: 255, g: 165, b: 0}),               // Dawn, Orange
+        new ColorStep(sunriseTime, {r: 254, g: 95, b: 0}),             // Sunrise, Red-Orange
+        new ColorStep(solarNoonTime, {r: 252, g: 255, b: 181}),        // Solar Noon, Pastel Yellow
+        new ColorStep(sunsetTime, {r: 255, g: 223, b: 0}),             // Sunset, Yellow-Red
+        new ColorStep(duskTime, {r: 230, g: 230, b: 250}),             // Dusk, Lavender
+    ];
+
+    // Call updateSiteColor now and every minute hereafter
+    updateSiteColor(colorSteps);
+    setInterval(() => updateSiteColor(colorSteps), 60000);
+
     addTimeToDashboard(time, sun);
     const ipstackData = await getIpStack();
     ipstackData.population = await getCountryData(ipstackData.country_code);
