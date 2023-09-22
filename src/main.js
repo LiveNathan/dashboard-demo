@@ -209,7 +209,7 @@ function linearInterpolation(start, end, weight) {
 }
 
 function getColorBetween(step1, step2, now) {
-    const weight = (now - step1.time) / (step2.time - step1.time);
+    const weight = (now - step1.time) / (step2.time - step1.time);  // Weight between 0 and 1
     return {
         r: Math.round(linearInterpolation(step1.color.r, step2.color.r, weight)),
         g: Math.round(linearInterpolation(step1.color.g, step2.color.g, weight)),
@@ -218,27 +218,19 @@ function getColorBetween(step1, step2, now) {
 }
 
 function getCurrentColor(colorSteps) {
-    // Get the current time as minutes since 0:00
     const now = new Date();
     const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
 
-    // Sort steps by time
     colorSteps.sort((a, b) => a.time - b.time);
 
-    // Find the first timestep that's greater than the current time
     for(let i = 0; i < colorSteps.length; i++) {
         if(colorSteps[i].time > minutesSinceMidnight) {
-            // If there's no previous color, then just return this color
             if(i === 0) return colorSteps[i].color;
-
-            // Return the color between the last color and this one
             return getColorBetween(colorSteps[i - 1], colorSteps[i], minutesSinceMidnight);
         }
     }
 
-    // If there's no color with a greater time then the site's color is
-    // the color of the last step
-    return colorSteps[colorSteps.length - 1].color;
+    return colorSteps[colorSteps.length - 1].color;  // Else, the color of the last step
 }
 
 
@@ -251,19 +243,16 @@ async function main() {
     const time = await getWorldTime();
     const sun = await getSun();
 
-    // Create the timeslots based on the fetched sunrise and sunset and solar noon
     // Convert the time from 'HH:MM:SS' format to the number of minutes since 0:00
-    const sunriseTime = sun.sunrise.split(':').reduce((acc,time) => (60 * acc) + +time);
+    const sunriseTime = sun.sunrise.split(':').reduce((acc,time) => (60 * acc) + +time);  // Split into an array. Iterate over the elements with an accumulator. `+time` converts the string to a number.
     const sunsetTime = sun.sunset.split(':').reduce((acc,time) => (60 * acc) + +time);
     const solarNoonTime = sun.solarNoon.split(':').reduce((acc,time) => (60 * acc) + +time);
 
-    // Create the approximate times for dawn and dusk
-    const dawnTime = sunriseTime - 60;  // assumed that dawn is 1 hour before sunrise
-    const duskTime = sunsetTime + 60;  // assumed that dusk is 1 hour after sunset
+    const dawnTime = sunriseTime - 60;  // Assume that dawn is 1 hour before sunrise
+    const duskTime = sunsetTime + 60;
 
-    // Create the ColorStep objects for midnight, dawn, sunrise, solar noon, sunset, dusk and passed them into updateSiteColor function.
     const colorSteps = [
-        new ColorStep(0, {r: 0, g: 0, b: 255}),                        // Midnight, Dark Blue
+        new ColorStep(0, {r: 0, g: 0, b: 255}),                   // Midnight, Dark Blue
         new ColorStep(dawnTime, {r: 255, g: 165, b: 0}),               // Dawn, Orange
         new ColorStep(sunriseTime, {r: 254, g: 95, b: 0}),             // Sunrise, Red-Orange
         new ColorStep(solarNoonTime, {r: 252, g: 255, b: 181}),        // Solar Noon, Pastel Yellow
@@ -271,7 +260,6 @@ async function main() {
         new ColorStep(duskTime, {r: 230, g: 230, b: 250}),             // Dusk, Lavender
     ];
 
-    // Call updateSiteColor now and every minute hereafter
     updateSiteColor(colorSteps);
     setInterval(() => updateSiteColor(colorSteps), 60000);
 
