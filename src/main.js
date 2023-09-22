@@ -16,6 +16,7 @@ async function getIpStack() {
         return await ipstackResponse.json();
     } catch (error) {
         console.error('Error fetching IP Stack:', error);
+        return "NA";
     }
 }
 
@@ -53,6 +54,7 @@ async function getWorldTime() {
         };
     } catch (error) {
         console.error('Error fetching world time:', error);
+        return "NA";
     }
 }
 
@@ -82,6 +84,7 @@ async function getCountryData(countryCode) {
         return countriesData.population;
     } catch (error) {
         console.error('Error fetching country data:', error);
+        return "NA";
     }
 }
 
@@ -93,6 +96,7 @@ async function getWeatherData(latitude, longitude) {
         return weatherData.current;
     } catch (error) {
         console.error('Error fetching sun data:', error);
+        return "NA";
     }
 }
 
