@@ -241,6 +241,8 @@ function getCurrentColor(colorSteps) {
 function updateSiteColor(steps) {
     const currentColor = getCurrentColor(steps);
     document.body.style.backgroundColor = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
+    document.body.style.transition = 'background-color 5s ease';
+    document.body.classList.add('loaded');
 }
 
 async function main() {
