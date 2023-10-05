@@ -2,8 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-#sun,#moon {
-    position: absolute;
-    width: 100px;
-    z-index: -1;
+.justify-distribute-all-lines {
+    text-align: justify;
+    text-align-last: justify;
 }

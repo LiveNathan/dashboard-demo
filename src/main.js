@@ -22,7 +22,7 @@ async function getIpStack() {
 
 function addIpStackToDashboard(ipstackData) {
     const ipStackDiv = createElementAndAppend({ parentElement: root, elementType: 'div', elementId: 'ipStack', classNames: 'flex flex-col' });
-    createElementAndAppend({ parentElement: ipStackDiv, elementType: 'div', elementId: 'ipAddress', classNames: 'text-2xl font-bold text-gray-500', textVal: "Country" });
+    createElementAndAppend({ parentElement: ipStackDiv, elementType: 'div', elementId: 'ipAddress', classNames: 'text-2xl font-bold text-gray-500 font-header', textVal: "Country" });
 
     const countryDiv = createElementAndAppend({ parentElement: ipStackDiv, elementType: 'div', elementId: 'country', classNames: 'flex text-xl justify-between flex-wrap gap-2' });
     createElementAndAppend({ parentElement: countryDiv, elementType: 'div', elementId: 'countryName', classNames: 'text-xl', textVal: ipstackData.country_name });
@@ -61,7 +61,7 @@ async function getWorldTime() {
 function addTimeToDashboard(time, sun) {
     const dayTimeDiv = createElementAndAppend({ parentElement: root, elementType: 'div', elementId: 'ipStack', classNames: 'flex flex-col' });
 
-    const timeDiv = createElementAndAppend({ parentElement: dayTimeDiv, elementType: 'div', elementId: 'timeDiv', classNames: 'flex gap-2 flex-wrap' });
+    const timeDiv = createElementAndAppend({ parentElement: dayTimeDiv, elementType: 'div', elementId: 'timeDiv', classNames: 'flex gap-2 flex-wrap text-gray-500 font-header' });
     createElementAndAppend({ parentElement: timeDiv, elementType: 'div', elementId: 'date', classNames: 'text-2xl font-bold', textVal: time.date });
     createElementAndAppend({ parentElement: timeDiv, elementType: 'div', elementId: 'time', classNames: 'text-2xl font-bold', textVal: time.time });
     createElementAndAppend({ parentElement: timeDiv, elementType: 'div', elementId: 'timeZone', classNames: 'text-2xl font-bold', textVal: time.timeZone });
@@ -102,7 +102,7 @@ async function getWeatherData(latitude, longitude) {
 
 function addWeatherDataToDashboard(weatherData) {
     const weatherDiv = createElementAndAppend({ parentElement: root, elementType: 'div', elementId: 'weather', classNames: 'flex flex-col' });
-    createElementAndAppend({ parentElement: weatherDiv, elementType: 'div', elementId: 'sunrise', classNames: 'text-2xl font-bold text-gray-500', textVal: "Weather" });
+    createElementAndAppend({ parentElement: weatherDiv, elementType: 'div', elementId: 'sunrise', classNames: 'text-2xl font-bold text-gray-500 font-header', textVal: "Weather" });
 
     const weatherDataDiv = createElementAndAppend({ parentElement: weatherDiv, elementType: 'div', elementId: 'weatherData', classNames: 'flex text-xl justify-between flex-wrap gap-2' });
     const tempC = weatherData.temp;
@@ -188,7 +188,7 @@ function deg2rad(deg) {
 
 function addIssDataToDashboard(iss_position, populationSpace, ipstackData) {
     const issDiv = createElementAndAppend({ parentElement: root, elementType: 'div', elementId: 'issDiv', classNames: 'flex flex-col' });
-    createElementAndAppend({ parentElement: issDiv, elementType: 'div', elementId: 'iss', classNames: 'text-2xl font-bold text-gray-500', textVal: "International Space Station" });
+    createElementAndAppend({ parentElement: issDiv, elementType: 'div', elementId: 'iss', classNames: 'text-2xl font-bold text-gray-500 font-header', textVal: "International Space Station" });
 
     const issDataDiv = createElementAndAppend({ parentElement: issDiv, elementType: 'div', elementId: 'issData', classNames: 'flex text-xl justify-between flex-wrap gap-2' });
     const latitude = parseFloat(parseFloat(iss_position.latitude).toFixed(2));
@@ -241,11 +241,65 @@ function getCurrentColor(colorSteps) {
 function updateSiteColor(steps) {
     const currentColor = getCurrentColor(steps);
     document.body.style.backgroundColor = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
-    document.body.style.transition = 'background-color 5s ease';
+    document.body.style.transition = 'background-color 10s ease';
     document.body.classList.add('loaded');
+
+    const dashboardTitle = document.getElementById('dashboardTitle');
+    if (dashboardTitle) {
+        dashboardTitle.style.color = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
+    }
+}
+
+async function getDailyQuote() {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const storedQuoteDate = localStorage.getItem('quoteDate');
+
+        if(storedQuoteDate === today) {
+            return localStorage.getItem('dailyQuote');
+        }
+
+        const response = await fetch("./Hobis says.txt");
+        const text = await response.text();
+
+        // Extracting single and multiline quotes
+        const lines = text.split('\n');
+        const quotes = [];
+        let quote = '';
+
+        lines.forEach(line => {
+            if (line.startsWith('    ')) {  // This might just check for any leading white space not necessary four spaces
+                quote += '\n' + line.trim();
+            } else {
+                if (quote !== '') quotes.push(quote);
+                quote = line;
+            }
+        });
+
+        quotes.push(quote); // Don't forget the last quote!
+        // Get a random quote
+        const randomIndex = Math.floor(Math.random() * quotes.length);
+
+        // Update localStorage with new quote and date.
+        localStorage.setItem('dailyQuote', quotes[randomIndex]);
+        localStorage.setItem('quoteDate', today);
+
+        return quotes[randomIndex];
+    } catch (error) {
+        console.error('Error fetching daily quote:', error);
+    }
+}
+
+function addDailyQuoteToDashboard(quote) {
+    const quoteDiv = createElementAndAppend({ parentElement: root, elementType: 'div', elementId: 'quoteDiv', classNames: 'flex flex-col' });
+    createElementAndAppend({ parentElement: quoteDiv, elementType: 'div', elementId: 'quoteTitle', classNames: 'text-2xl font-bold text-gray-500 font-header', textVal: "Hobis says" });
+
+    const quoteDataDiv = createElementAndAppend({ parentElement: quoteDiv, elementType: 'div', elementId: 'quoteData', classNames: 'flex text-xl justify-between flex-wrap gap-2' });
+    createElementAndAppend({ parentElement: quoteDataDiv, elementType: 'div', elementId: 'quoteText', classNames: 'text-xl', textVal: quote });
 }
 
 async function main() {
+    createElementAndAppend({ parentElement: root, elementType: 'div', elementId: 'dashboardTitle', classNames: 'text-4xl font-black text-black font-header text-center w-full tracking-wide md:tracking-widest', textVal: "Jim's Daily Dashboard" });
     const time = await getWorldTime();
     const sun = await getSun();
 
@@ -267,7 +321,15 @@ async function main() {
     ];
 
     updateSiteColor(colorSteps);
-    setInterval(() => updateSiteColor(colorSteps), 60000);
+    setInterval(() => {
+        updateSiteColor(colorSteps);
+
+        const currentColor = getCurrentColor(colorSteps);
+        const dashboardTitle = document.getElementById('dashboardTitle');
+        if (dashboardTitle) {
+            dashboardTitle.style.color = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
+        }
+    }, 60000);
 
     addTimeToDashboard(time, sun);
     const ipstackData = await getIpStack();
@@ -278,6 +340,8 @@ async function main() {
     const iss_position = await getIssLocationData();
     const populationSpace = await getIssPeopleData();
     addIssDataToDashboard(iss_position, populationSpace, ipstackData);
+    const dailyQuote = await getDailyQuote();
+    addDailyQuoteToDashboard(dailyQuote);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
