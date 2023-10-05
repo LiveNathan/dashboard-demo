@@ -90,7 +90,7 @@ async function getCountryData(countryCode) {
 
 async function getWeatherData(latitude, longitude) {
     try {
-        const OPENWEATHERMAP_KEY = "5123e4f646b5f440cbfed22476f68163";
+        const OPENWEATHERMAP_KEY = "8b32c989ba71611bc41502690b5e1b88";
         let weatherResponse = await fetch(`https://api.openweathermap.org/data/3.0/onecall?lat=${latitude}&lon=${longitude}&exclude=minutely,hourly,daily,alerts&units=metric&appid=${OPENWEATHERMAP_KEY}`);
         let weatherData = await weatherResponse.json();
         return weatherData.current;
